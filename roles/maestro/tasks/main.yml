@@ -1,0 +1,15 @@
+---
+- name: Install tools on our orchestrator system.
+  apt: name={{ item }} state=present
+  with_items:
+    - curl
+    - fail2ban
+    - shorewall
+    - libpam-cracklib
+    - hddtemp
+    - smartmontools
+    - lm-sensors
+    - ntp
+    - unattended-upgrades
+    - python-httplib2
+  tags: [ 'packages' ]
