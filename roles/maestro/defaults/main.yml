@@ -1,0 +1,11 @@
+---
+# file: roles/maetro/defaults/main.yml
+
+ws_debs_media:
+  - [ 'gimp', 'vlc' ]
+
+ws_debs_sysutils:
+  - [ 'gparted', 'curl' ]
+
+
+

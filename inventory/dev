@@ -1,3 +1,7 @@
+[workstation]
+ws01
+ws02
+
 [loadbalancer]
 lb01
 lb02
