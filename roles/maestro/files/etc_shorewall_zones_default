@@ -1,0 +1,8 @@
+# This is an orchestrated configuration file, any manual edits will be
+# lost. File a ticket and include the file name and the any changes
+# you would like to make.
+###############################################################################
+#ZONE   TYPE            OPTIONS         IN                      OUT
+#                                       OPTIONS                 OPTIONS
+fw      firewall
+net     ipv4
