@@ -1,6 +1,15 @@
 ---
 # file: roles/maetro/defaults/main.yml
 
+platform_format: notebook # workstation
+
+
+gnome_3_debs:
+  - [ 'gnome-shell','gnome-tweak-tool' ]
+
+gnome_3_official_repository:
+  - 'ppa:gnome3-team/gnome3'
+
 ws_debs_media:
   - [ 'gimp', 'vlc' ]
 

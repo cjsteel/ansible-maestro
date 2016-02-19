@@ -1,3 +1,7 @@
+[windows]
+winserver1.example.com
+winserver2.example.com
+
 [workstation]
 ws01
 ws02

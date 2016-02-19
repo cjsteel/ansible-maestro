@@ -1,0 +1,11 @@
+---
+
+- name: Include our Ubuntu 14.04 tasks when we find Ubuntu
+  include: 12.04.yml
+  when: ansible_distribution_version == "12.04"
+
+- name: Include our Ubuntu 14.04 tasks when we find Ubuntu
+  include: 14.04.yml
+  when: ansible_distribution_version == "14.04"
+
+

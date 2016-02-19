@@ -1,0 +1,8 @@
+# This is an orchestrated configuration file, andy manual edits will be
+# lost. File a ticket and include the file name and the any changes
+# you would like to make. 
+###############################################################################
+#ZONE   INTERFACE       BROADCAST       OPTIONS
+net     eth0		detect
+net	wlan0		detect
+
