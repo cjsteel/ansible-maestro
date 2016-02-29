@@ -1,55 +1,16 @@
 ---
 
+# ssh
 
+## 
 
-
-# Don't remove ansible_ 
-# if this exists we have wireless: "{{ ansible_wlan0 }}" and we want shorewall to be
-# configured for this.
-#   if it is active...
-# if this exists with have wired: "{{ ansible_eth0 }}"
-    if it is not active...
-
-# add this later     - apcupsd
-
-# gnome3 stuff
-
-## apt packages
-
-- name: Add the gnome3 repository
-  apt_repository: repo='ppa:gnome3-team/gnome3' state=present
-  tags: [ 'packages', 'gnome_3' ]
-
-- name: update apt cache
-  apt: update_cache=yes cache_valid_time=43200
-  tags: [ 'packages', 'gnome_3' ]
-
-- name: Install packages, variables defined in ../default/main.yml
-  apt: name={{ item }} state=present
-  with_flattened:
-     - "{{ gnome_3_debs }}"
-  tags: [ 'packages', 'gnome_3' ]
-
-## System Utilties
-
-- name: Install tools on our orchestrator system.
-  apt: name={{ item }} state=present
-  with_items:
-    - gparted
-    - build-essential
-
-## ssh
-
-- name: install openssh server
+- name: ensure that openssh server is installed
   apt: name={{ item }} state=present
   with_items:
     - openssh-server
+  tags: [ 'packages', 'ssh' ]
 
-# ssh
-# Here we use a handler. Handlers are run after everything else
-# so if we fail before the end the handler will not be run.
-# this can cause confusion on reruns especially for start and
-# stop handlers.
+###### Here we use a handler via **notify:**. Handlers are run after everything else so if we have a failure before the end of our playbook the handler will not be run and this can cause confusion on playbook reruns.
 
 - name: Disallow root SSH access
   lineinfile: dest=/etc/ssh/sshd_config
@@ -57,15 +18,109 @@
               line="PermitRootLogin no"
               state=present
   notify: restart ssh
-
+  tags: [ 'packages', 'ssh' ]
 
 # firewall
 
-- name: install fail2ban and shorewall
+## fail2ban
+#
+# ban hosts that cause multiple authentication errors
+
+- name: ensure that fail2ban is installed
   apt: name={{ item }} state=present
   with_items:
     - fail2ban
+  tags: [ 'packages', 'fail2ban' ]
+
+## shorewall
+
+- name: ensure that fail2ban is installed
+  apt: name={{ item }} state=present
+  with_items:
     - shorewall
+  tags: [ 'packages', 'shorewall' ]
+
+# pause then get shorewall status, if status running then... if stopped then.
+
+# We need to get the active interface name!
+- name: Copy etc_shorewall_interfaces, backup remote version if it is not the same.
+  copy: src=etc_shorewall_interfaces dest=/etc/shorewall/interfaces owner=root group=root mode=644 backup=yes
+  tags: [ 'packages', 'shorewall' ]
+
+- name: Copy etc_shorewall_policy, backup remote version if it is not the same.
+  copy: src=etc_shorewall_policy dest=/etc/shorewall/policy owner=root group=root mode=644 backup=yes
+  tags: [ 'packages', 'shorewall' ]
+
+# IMPORTANT - WE HIDE THE RULES FILE IN .private BECAUSE IT CONTAINS FIREWALL INFO
+
+- name: Copy /etc/shorewall/rules, backup remote version if it is not the same.
+  copy: src=.private/etc_shorewall_rules dest=/etc/shorewall/rules owner=root group=root mode=644 backup=yes
+  tags: [ 'packages', 'shorewall' ]
+
+- name: Copy /etc/shorewall/zones, backup remote version if it is not the same.
+  copy: src=etc_shorewall_zones dest=/etc/shorewall/zones owner=root group=root mode=644 backup=yes
+  tags: [ 'packages', 'shorewall' ]
+
+## ufw 
+
+### When shorewall is installed we need to disable ufw
+
+- name: disable ufw
+  shell: ufw disable
+  tags: [ 'packages', 'shorewall' ]
+
+## Configure shorewall to start on boot and start shorewall
+#
+# We probably want to force this to start before the script is completed eh?
+
+- name: Configure shorewall to start on boot
+  lineinfile: dest=/etc/default/shorewall
+              regexp="^startup=0"
+              line="startup=1"
+              state=present
+  notify: start shorewall
+
+# pause then get shorewall status
+
+# gnome3
+
+- name: Add the gnome3 repository
+  apt_repository: repo='ppa:gnome3-team/gnome3' state=present
+  tags: [ 'packages', 'gnome3' ]
+
+- name: update apt cache
+  apt: update_cache=yes cache_valid_time=43200
+  tags: [ 'packages', 'gnome3' ]
+
+- name: Install packages, variables defined in ../default/main.yml
+  apt: name={{ item }} state=present
+  with_flattened:
+     - "{{ gnome_3_debs }}"
+  tags: [ 'packages', 'gnome3' ]
+
+# development tools
+
+## build-essential
+
+- name: Installing build-essential.
+  apt: name={{ item }} state=present
+  with_items:
+    - build-essential
+  tags: [ 'packages', 'build-essential' ]
+
+# system utilties
+
+## gparted
+
+- name: Install gparted and any gparted add ons.
+  apt: name={{ item }} state=present
+  with_items:
+    - gparted
+  tags: [ 'packages', 'gparted' ]
+
+# Passwords
+
+## password utilities
 
 - name: install password stuff
   apt: name={{ item }} state=present
@@ -73,8 +128,23 @@
     - libpam-cracklib
     - pwgen
 
+## Ensure for sufficient password complexity
+
+# Set so passwords require:
+# * minimum of 8 characters
+# * one or more upper case
+# * one or more digits
+# * one or more other (special) character(s)
+
+- name: Copy default /etc/pam.d/common-password, backup remote version if it is not the same.
+  copy: src=etc_pam.d_common-password dest=/etc/pam.d/common-password owner=root group=root mode=644 backup=yes
 
 # monitoring
+
+## Next generation system logging daemon
+#
+# Open Source log management solution
+# * https://syslog-ng.org/
 
 - name: install syslog-ng
   apt: name={{ item }} state=present
@@ -103,32 +173,4 @@
      - "{{ ws_debs_media }}"
      - "{{ ws_debs_sysutils }}"
   tags: [ 'packages' ]
-
-# shorewall
-
-# We need to get the active interface name!
-- name: Copy default /etc/shorewall/interface, backup remote version if it is not the same.
-  copy: src=etc_shorewall_interfaces_default dest=/etc/shorewall/interfaces owner=root group=root mode=644 backup=yes
-
-- name: Copy default /etc/shorewall/policy, backup remote version if it is not the same.
-  copy: src=etc_shorewall_policy_default dest=/etc/shorewall/policy owner=root group=root mode=644 backup=yes
-
-# IMPORTANT - WE HIDE THE RULES FILE IN .private BECAUSE IT CONTAINS FIREWALL INFO
-
-- name: Copy default /etc/shorewall/rules, backup remote version if it is not the same.
-  copy: src=.private/etc_shorewall_rules_default dest=/etc/shorewall/rules owner=root group=root mode=644 backup=yes
-
-- name: Copy default /etc/shorewall/zones, backup remote version if it is not the same.
-  copy: src=etc_shorewall_zones_default dest=/etc/shorewall/zones owner=root group=root mode=644 backup=yes
-
-- name: disable ufw
-  shell: ufw disable
-
-- name: Configure shorewall to start on boot
-  lineinfile: dest=/etc/default/shorewall
-              regexp="^startup=0"
-              line="startup=1"
-              state=present
-  notify: start shorewall
-
 

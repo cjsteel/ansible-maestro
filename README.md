@@ -1,120 +1,91 @@
 # maestro
 
-Maestro is an example of a nice way to create and Ansible orchestration system that is ready to start orchestrating. The first system to be configured is the Ansible host itself, sometimes referred to as the **Controller**. 
+Maestro is an example of an Ansible **automation** script.  and this first incarnation will configure the system that Ansible is being run on. If we where doing system **orchestration** then the system that Ansibler is running on might be called a **Controller** but that is for a later date...
 
-## Ansible 
+## About Ansible 
 
-Ansible is an opensource agentless system orchestration software created in Python although it supports modules written in many other language. It is relativly new and was recently purchased by Redhat (October 2015)?. It is the second system orchestration system created by the author, Michael Dehaan, the first being Cobbler, a "bare metal" configuration system that configures new systems via PXE.
+Ansible is an opensource agentless system orchestration software created in Python although it supports modules written in many other language. It is relativly new (# years?) and was recently purchased by Redhat (October 2015)?. It is the second system orchestration system created by the author, Michael Dehaan, the first being Cobbler, a "bare metal" configuration system that configures new systems via PXE.
 
-In addition to the free opensource product Ansible, Ansible also offers a ommercial product called Tower as well as support plans.
+In addition to the free and opensource product Ansible, Ansible also offers a commercial product called Tower as well as support plans.
 
-Ansible runs on most major operating system (this includes Windows). This script is only concerned with various Linux flavours and OS X at this time.
+Ansible runs on most major operating system (this includes Windows). This script is could work on various Linux flavours and OS X but at the moment it supports the configuration of an Ubuntu 12.04 workstation as documented here:
+
+* [Linux Workstations](https://redmine.cbrain.mcgill.ca/projects/acelabit/wiki/Linux_Workstations)
+
+with a few adjustments to assit in future automation projects.
 
 Products similar to Ansible include:
 
 * Puppet
-* fabric
+* Fabric
+* Chef
+* Otter
+* Salt
+* others
 
-### Code as documentation
+### Documentation as Code and Infrastructure as Code
 
-One of my favorite things about Ansible scripts is that they are very easy to read and serve as both deployment and orchestration code and documentation making it much easier to add additional enhancements over time.
+One of my favorite things about Ansible scripts is that, unlike bash scripts or other autmation methods, Ansible scripts also happen to be quite easy to read and can serve as deployment and orchestration code as well as system and infrastructure documentation. This also makes it much easier to add additional enhancements over time as well.
 
 ### References and credits
 
-This document is based on the excellent Udemy course created by Chris Lunsford's called "Mastering Ansible". It is well worth the money and it is the best tutorial I have found on Ansible by far.
+The layout of this project is based in part on the excellent Udemy course, "Mastering Ansible", created by Chris Lunsford. Well worth the money and it is the best tutorial I have found on Ansible by far. You may want to read the Ansible site documentation and play a bit before tackling Chris's tutorial.
 
-* [Latest Releases Via Apt (Ubuntu)](http://docs.ansible.com/ansible/intro_installation.html#latest-releases-via-apt-ubuntu)
 
 ## Installing Ansible
 
-Many options exist. The following will give you a stable and easy to maintain up to date version of Ansible. You probably **do not** want the version of Ansible provided in the ubuntu packaging system. It was version 14,x at the time this README was created and will not run this script. Ansible was a great product when it cam out and many improvements have been made and contributed by developers all over the world.
+Many installtion options exist.
+
+### Stable and up to date install
+
+ The following will give you a stable and easy to maintain up to date version of Ansible. You probably **do not** want the version of Ansible provided in the ubuntu packaging system. It was version 14,x at the time this README was created and will not run this script. Ansible was a great product when it cam out and many improvements have been made and contributed by developers all over the world.
 
 We are going to install from the Ansible created and maintained packages as they will give us the latest version. If you use, for example, the default Ubuntu 12.04 version of Ansible you would end up with version 14.x at the moment and these scripts would not work as you would be missing the ability to use commands like `become` in your script.
 
+#### Add repository
+
         sudo apt-get install software-properties-common
         sudo apt-add-repository ppa:ansible/ansible
+
+#### Install Ansible
+
         sudo apt-get update
         sudo apt-get install ansible -y
 
-## a git interlude
+### Running from Anssible from source (not installing it...)
 
-If you are going to clone this project...
+#### Requirements
 
-### installing git
+* git
+* project directory
 
-     sudo apt-get install git -y
+### Create a project directory
+
+or see alternative below
+    mkdir ~/projects
+
+### Alternative:
+
+If you want to run Ansible from a USB
+
+    format the usb as ext4    
+    mkdir /media/ext4/projects
+    cd /media/ext4/projects
+    git clone https://github.com/ansible/ansible.git
 
 ### clone our project
 
+    git clone https://github.com/cjsteel/maestro.git
 
-### Configure git
+# Using git
 
-#### ~/.gitconfig
-
-    git config --global user.email "chris.steel@gmail.com"
-    git config --global user.name "Christopher Steel"
-    cat ~/.gitconfig
-
-#### ~/.gitignore
-
-Edit as required...
-
-#### commit/push
-
-git push
-
-##### github configuration
-
-warning: push.default is unset; its implicit value is changing in
-Git 2.0 from 'matching' to 'simple'. To squelch this message
-and maintain the current behavior after the default changes, use:
-
-  git config --global push.default matching
-
-To squelch this message and adopt the new behavior now, use:
-
-  git config --global push.default simple
-
-##### github password
-
-Caching your GitHub password in Git
-https://help.github.com/articles/caching-your-github-password-in-git/
-
-
-Managing Remotes / Caching your GitHub password in Git
-Caching your GitHub password in Git
-
-    mac
-    windows
-    linux
-    all
-
-If you're cloning GitHub repositories using HTTPS, you can use a credential helper to tell Git to remember your GitHub username and password every time it talks to GitHub.
-
-If you clone GitHub repositories using SSH, then you authenticate using SSH keys instead of a username and password. For help setting up an SSH connection, see Generating an SSH Key.
-
-Tip: You need Git 1.7.10 or newer to use the credential helper.
-
-Turn on the credential helper so that Git will save your password in memory for some time. By default, Git will cache your password for 15 minutes.
-
-    On the command line, enter the following:
-
-    git config --global credential.helper cache
-    # Set git to use the credential memory cache
-
-    To change the default password cache timeout, enter the following:
-
-    git config --global credential.helper 'cache --timeout=3600'
-    # Set the cache to timeout after 1 hour (setting is in seconds)
-
-
+See [docs/git.md](docs/git.md) for a a very brief intro to git.
 
 ## Project directory
 
 If you will build the project from scratch.
 
 Create a directory to hold your ansible project or clone this project from GIT AND/OR MERCURIAL URLs HERE
-
 
 	mkdir ~/maestro
 	cd ~/maestro
@@ -233,11 +204,41 @@ This is a fast, easy and powerful way to gather all the facts that Ansible gathe
 
         ansible all -m setup --tree ${HOME}/dump_path
 
-#### COnverting to html
+        ansible all -m setup --tree ../pull_dump
+
+
+#### Copnmverting json to markdown 
+
+##### json2md
+
+* requires npm i json2md
+
+* [](https://github.com/IonicaBizau/json2md)
+* [](http://ionicabizau.net/blog/27-how-to-convert-json-to-markdown-using-json2md)
+
+#### http://pandoc.org/
+
+html to md?
+
+* http://pandoc.org/demos.html
+
+Converting a web page to markdown:
+
+        pandoc -s -r html maestro.html -o maestro.md
+
+        pandoc -s -r html http://www.gnu.org/software/make/ -o example12.text
+
+#### Redmine
+
+**Textile**
+
+#### Converting to html
 
         http://json2html.herokuapp.com/
 
 #### Converting html2markdown
+
+html2markdown converts HTML generated by Markdown back into Markdown.
 
     http://www.codefu.org/html2markdown/
 

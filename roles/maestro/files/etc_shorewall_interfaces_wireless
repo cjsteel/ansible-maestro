@@ -3,6 +3,6 @@
 # you would like to make. 
 ###############################################################################
 #ZONE   INTERFACE       BROADCAST       OPTIONS
+net     wlan0		detect
 net     eth0		detect
-net	wlan0		detect
 
