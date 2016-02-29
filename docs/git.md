@@ -52,7 +52,7 @@ If you own the repository you can push changes directly to it like this:
 
         git push
 
-##### github configuration
+## github configuration
 
 warning: push.default is unset; its implicit value is changing in
 Git 2.0 from 'matching' to 'simple'. To squelch this message
@@ -64,20 +64,39 @@ To squelch this message and adopt the new behavior now, use:
 
   git config --global push.default simple
 
-##### github password
+## github passwords
 
 * [Caching your GitHub password in Git](https://help.github.com/articles/caching-your-github-password-in-git/)
 
-###### Cloning via https
 
-* use a credential helper to tell Git to remember your GitHub username and password every time it talks to GitHub.
-* credential helper. requires Git 1.7.10+
+## development
 
-###### Cloning via ssh
+### Connecting via ssh
+
+        git clone git@github.com:cjsteel/maestro.git
 
 Authenticate using SSH keys (instead of a username and password).
 
+#### .git/config
 
+        [core]
+        	repositoryformatversion = 0
+        	filemode = true
+        	bare = false
+        	logallrefupdates = true
+        [remote "origin"]
+        	fetch = +refs/heads/*:refs/remotes/origin/*
+        	url = git@github.com:cjsteel/maestro.git
+        [branch "master"]
+        	remote = origin
+        	merge = refs/heads/master
+
+### Connecting using https
+
+        git clone https://github.com/cjsteel/maestro.git
+
+* use a credential helper to tell Git to remember your GitHub username and password every time it talks to GitHub.
+* credential helper. requires Git 1.7.10+
 * launch credential helper
 * by default it will cache your password for 15 minutes.
 
@@ -89,4 +108,5 @@ Have git use the credential memory cache
 Set the cache to timeout after 1 hour (setting is in seconds).
 
         git config --global credential.helper 'cache --timeout=3600'
+
 
