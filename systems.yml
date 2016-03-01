@@ -7,5 +7,6 @@
       apt: update_cache=yes cache_valid_time=43200
       tags: [ 'packages' ]
 
+#- include: ansible-rsync
 - include: maestro.yml
 

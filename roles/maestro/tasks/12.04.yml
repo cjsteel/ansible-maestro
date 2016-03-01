@@ -69,18 +69,31 @@
   shell: ufw disable
   tags: [ 'packages', 'shorewall' ]
 
+#  notify: ufw disable
+
 ## Configure shorewall to start on boot and start shorewall
 #
 # We probably want to force this to start before the script is completed eh?
 
-- name: Configure shorewall to start on boot
-  lineinfile: dest=/etc/default/shorewall
-              regexp="^startup=0"
-              line="startup=1"
-              state=present
-  notify: start shorewall
+- name: Copy /etc/default/shorewall, backup remote version if it is not the same.
+  copy: src=etc_default_shorewall dest=/etc/default/shorewall owner=root group=root mode=644 backup=yes
+  notify: shorewall restart
+  tags: [ 'packages', 'shorewall' ]
 
 # pause then get shorewall status
+
+# test shorewall
+
+# sudo shorewall check
+#
+# look for "Shorewall configuration verified" in output
+
+
+- name: shorewall check
+  shell: shorewall check
+  tags: [ 'packages', 'shorewall' ]
+
+# sudo shorewall restart
 
 # gnome3
 

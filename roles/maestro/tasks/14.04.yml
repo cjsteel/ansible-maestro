@@ -1,31 +1,339 @@
 ---
-# Example that prints the loopback address and gateway for each host
-- debug: msg="System {{ inventory_hostname }} has uuid {{ ansible_product_uuid }}"
 
-- debug: msg="System {{ inventory_hostname }} has gateway {{ ansible_default_ipv4.gateway }}"
-  when: ansible_default_ipv4.gateway is defined
+##### Gathering facts
+#####
+##### Get a list of all installed packages
+##### dpkg --get-selections
+#####
+##### Example that prints the loopback address and gateway for each host
+#####- debug: msg="System {{ inventory_hostname }} has uuid {{ ansible_product_uuid }}"
+#####
+#####- debug: msg="System {{ inventory_hostname }} has gateway {{ ansible_default_ipv4.gateway }}"
+#####  when: ansible_default_ipv4.gateway is defined
+#####
+#####- shell: /usr/bin/uptime
+#####  register: result
+#####
+#####- debug: var=result
+#####
+#####- name: Display all variables/facts known for a host
+#####  debug: var=hostvars[inventory_hostname]
 
-- shell: /usr/bin/uptime
-  register: result
+## 
 
-- debug: var=result
+###### - apt: update_cache=yes cache_valid_time=3600
 
-- name: Display all variables/facts known for a host
-  debug: var=hostvars[inventory_hostname]
+######- name: Upgrade all packages in Debian-based machines
+######  apt: upgrade=dist update_cache=yes cache_valid_time=3600
+######  when: "{{ inventory_hostname }}" != "{{ ansible_controller }}"
+######
+######- name: Reboot server
+######  command: /sbin/reboot
+######  when: "{{ inventory_hostname }}" != "{{ ansible_controller }}"
+######
+######- name: Wait for the server to finish rebooting
+######  sudo: no
+######  local_action: wait_for host="{{ inventory_hostname }}" search_regex=OpenSSH port=22 timeout=300
+######  when: "{{ inventory_hostname }}" != "{{ ansible_controller }}"
+######
+######  ignore_errors: true
+######- name: waiting for server to come back
+######  local_action: wait_for host={{ inventory_hostname }} state=started delay=30 timeout=300
+######  sudo: false
 
-# Add gnome3
+# ssh
 
-- name: Add the gnome3 repository
+## Instal ssh server
+- name: install openssh server
+  apt: name={{ item }} state=present
+  with_items:
+    - openssh-server
+  tags: [ 'packages', 'ssh' ]
+
+## configure ssh
+
+### /etc/ssh/sshd_config
+
+# ssh
+# Here we use a handler. Handlers are run after everything else
+# so if we fail before the end the handler will not be run.
+# this can cause confusion on reruns especially for start and
+# stop handlers.
+
+- name: Disallow root SSH access
+  lineinfile: dest=/etc/ssh/sshd_config
+              regexp="^PermitRootLogin"
+              line="PermitRootLogin no"
+              state=present
+  notify: restart ssh
+  tags: [ 'packages', 'shorewall' ]
+
+# fail2ban
+
+## fail2ban installation
+
+- name: **install fail2ban and shorewall**
+  apt: name={{ item }} state=present
+  with_items:
+    - fail2ban
+  tags: [ 'packages', 'fail2ban' ]
+
+# shorewall
+
+## shorewall Installation
+
+- name: **install fail2ban and shorewall**
+  apt: name={{ item }} state=present
+  with_items:
+    - fail2ban
+    - shorewall
+  tags: [ 'packages', 'shorewall' ]
+
+## Shorewall configuration
+
+### /etc/shorewall/interface
+
+#### Wirelss notebook
+
+- name: **Ensure for /etc/shorewall/interface, backup remote if different**
+  copy: src=etc_shorewall_interfaces_wireless dest=/etc/shorewall/interfaces owner=root group=root mode=644 backup=yes
+  when: ansible_form_factor == "Laptop"
+  tags: [ 'packages', 'shorewall' ]
+
+#### workstation != Laptop
+
+- name: **Ensure for /etc/shorewall/interface, backup remote if different**
+  copy: src=etc_shorewall_interfaces dest=/etc/shorewall/interfaces owner=root group=root mode=644 backup=yes
+  when: ansible_form_factor != "Laptop"
+  tags: [ 'packages', 'shorewall' ]
+
+### /etc/shorewall/policy
+
+- name: **Ensure for /etc/shorewall/policy, backup remote if different**
+  copy: src=etc_shorewall_policy dest=/etc/shorewall/policy owner=root group=root mode=644 backup=yes
+  tags: [ 'packages', 'shorewall', 'fail2ban' ]
+
+### /etc/shorewall/rules
+
+# IMPORTANT - WE HIDE THE RULES FILE IN .private BECAUSE IT CONTAINS FIREWALL INFO
+
+#### wireless rules
+
+- name: **Ensure for /etc/shorewall/rules, backup remote if different**
+  copy: src=.private/etc_shorewall_rules_wireless dest=/etc/shorewall/rules owner=root group=root mode=644 backup=yes
+  when: ansible_form_factor == "Laptop"
+  tags: [ 'packages', 'shorewall' ]
+
+#### no wireless rules
+
+- name: **Ensure for /etc/shorewall/rules, backup remote if different**
+  copy: src=.private/etc_shorewall_rules_wireless dest=/etc/shorewall/rules owner=root group=root mode=644 backup=yes
+  when: ansible_form_factor == "Laptop"
+  tags: [ 'packages', 'shorewall' ]
+
+### /etc/shorewall/zones
+
+- name: **Ensure for /etc/shorewall/zones, backup remote if different**
+  copy: src=etc_shorewall_zones dest=/etc/shorewall/zones owner=root group=root mode=644 backup=yes
+  tags: [ 'packages', 'shorewall' ]
+
+### /etc/default/shorewall
+
+- name: **Configure shorewall to start on boot**
+  lineinfile: dest=/etc/default/shorewall
+              regexp="^startup=0"
+              line="startup=1"
+              state=present
+  notify: start shorewall
+  tags: [ 'packages', 'shorewall' ]
+
+### disable any other firewalls
+
+#### disable ufw
+
+- name: disable ufw
+  shell: ufw disable
+  tags: [ 'packages', 'shorewall' ]
+
+# User security
+
+## password security
+
+- name: Install password enhancement tools
+  apt: name={{ item }} state=present
+  with_items:
+    - libpam-cracklib
+    - pwgen
+  tags: [ 'packages', 'usecurity' ]
+
+# System administartion
+
+
+## install unattended-upgrades
+
+- name: Disallow root SSH access
+  apt: name={{ item }} state=present
+  with_items:
+    - unattended-upgrades
+  tags: [ 'packages', 'usecurity' ]
+
+# ntp
+
+- name: intall ntp
+  apt: name={{ item }} state=present
+  with_items:
+    - ntp
+  tags: [ 'packages', 'ntp' ]
+
+# Ensure for gnome3
+
+- name: **Add the gnome3 repository**
   apt_repository: repo='ppa:gnome3-team/gnome3' state=present
   tags: [ 'packages', 'gnome_3' ]
 
-- name: update apt cache
+- name: **apt update and set cache time**
   apt: update_cache=yes cache_valid_time=43200
   tags: [ 'packages', 'gnome_3' ]
 
-- name: Install packages, variables defined in ../default/main.yml
+- name: **Install gnome3 packages** (variables defined in ../default/main.yml)
   apt: name={{ item }} state=present
   with_flattened:
      - "{{ gnome_3_debs }}"
   tags: [ 'packages', 'gnome_3' ]
 
+
+# image processing tools
+
+- name: install image processing tools
+  apt: name={{ item }} state=present
+  with_items:
+    - imagemagick
+  tags: [ 'packages', 'usecurity' ]
+
+
+## utilities
+
+- name: Install exfat files system and utilities
+  apt: name={{ item }} state=present
+  with_items:
+    - htop
+  tags: [ 'packages', 'sysadmin' ]
+
+- name: install curl
+  apt: name={{ item }} state=present
+  with_items:
+    - curl
+  tags: [ 'packages', 'sysadmin' ]
+
+## Partitioning
+
+### Filesystems
+
+- name: Install exfat files system and utilities
+  apt: name={{ item }} state=present
+  with_items:
+    - exfat-fuse
+    - exfat-utils
+  tags: [ 'packages', 'sysadmin' ]
+
+### Partitioner
+
+- name: install gparted.
+  apt: name={{ item }} state=present
+  with_items:
+    - gparted
+  tags: [ 'packages', 'sysadmin' ]
+
+### monitoring
+
+- name: install syslog-ng
+  apt: name={{ item }} state=present
+  with_items:
+    - syslog-ng-core
+    - syslog-ng
+  tags: [ 'packages', 'sysadmin' ]
+
+
+- name: install sysadmin monitoring tools
+  apt: name={{ item }} state=present
+  with_items:
+    - hddtemp
+    - smartmontools
+    - lm-sensors
+  tags: [ 'packages', 'sysadmin', 'monitoring' ]
+
+
+## Development tools
+
+### build tools
+
+- name: Install tools on our orchestrator system.
+  apt: name={{ item }} state=present
+  with_items:
+    - build-essential
+  tags: [ 'packages', 'sysadmin' ]
+
+### Versioning systems
+
+#### git
+
+- name: install versioning system git
+  apt: name={{ item }} state=present
+  with_items:
+    - git
+  tags: [ 'packages', 'sysadmin' ]
+
+#### Mercurial
+
+- name: install versioning system mercurial
+  apt: name={{ item }} state=present
+  with_items:
+    - mercurial
+  tags: [ 'packages', 'sysadmin' ]
+
+# Media
+
+## Video
+
+### vlc
+
+- name: Install media tool vlc
+  apt: name={{ item }} state=present
+  with_items:
+    - vlc
+  tags: [ 'packages', 'media' ]
+
+## Graphics
+
+### Gimp
+
+- name: Install media tool vlc
+  apt: name={{ item }} state=present
+  with_items:
+    - gimp
+  tags: [ 'packages', 'media' ]
+
+### Browsers
+
+- name: Install browsers
+  apt: name={{ item }} state=present
+  with_items:
+    - lynx
+    - links
+  tags: [ 'packages', 'browsers' ]
+
+#### Browser plugins
+
+- name: Install browser plugins
+  apt: name={{ item }} state=present
+  with_items:
+    - icedtea-plugin
+  tags: [ 'packages', 'browsers_plugins' ]
+
+# editors
+
+- name: install editors
+  apt: name={{ item }} state=present
+  with_items:
+    - vim
+    - nano
