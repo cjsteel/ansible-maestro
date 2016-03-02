@@ -1,14 +1,19 @@
 ---
 # file: maestro/handlers/main.yml
 
-- name: restart ssh
+- name: cups restart
+  service: name=cups state=restarted
+
+- name: shorewall restart
+  service: name=shorewall state=restarted
+
+- name: ssh restart
   service: name=ssh state=restarted
 
 - name: ufw disable
   service: name=ufw state=stopped enabled=no
 
-#- name: start ufw
+#- name: ufw start
 #  service: name=ufw state=started enabled=yes
 
-- name: shorewall restart
-  service: name=shorewall state=restarted
+
