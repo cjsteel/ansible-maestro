@@ -16,4 +16,6 @@
 #- name: ufw start
 #  service: name=ufw state=started enabled=yes
 
+- name: ups restart
+  service: name=ups state=restarted
 

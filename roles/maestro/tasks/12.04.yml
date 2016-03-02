@@ -17,7 +17,7 @@
               regexp="^PermitRootLogin"
               line="PermitRootLogin no"
               state=present
-  notify: restart ssh
+  notify: ssh restart
   tags: [ 'packages', 'ssh' ]
 
 # firewall
@@ -93,7 +93,36 @@
   shell: shorewall check
   tags: [ 'packages', 'shorewall' ]
 
-# sudo shorewall restart
+## install unattended-upgrades
+
+- name: Disallow root SSH access
+  apt: name={{ item }} state=present
+  with_items:
+    - unattended-upgrades
+  tags: [ 'packages', 'usecurity' ]
+
+### Configure unattended-upgrades
+
+- name: Copy /etc/apt/apt.conf.d/50unattended-upgrades and backup remote version if different.
+  copy: src=etc_apt_apt.conf.d_50unattended-upgrades dest=/etc/apt/apt.conf.d/50unattended-upgrades owner=root group=root mode=644 backup=yes
+  tags: [ 'packages', 'unattended-upgrades' ]
+
+- name: Copy /etc/apt/apt.conf.d/10periodic and backup remote version if different.
+  copy: src=etc_apt_apt.conf.d_10periodic dest=/etc/apt/apt.conf.d/10periodic owner=root group=root mode=644 backup=yes
+  tags: [ 'packages', 'unattended-upgrades' ]
+
+
+  notify: cups restart
+
+## time server
+
+### install ntp
+
+- name: intall ntp
+  apt: name={{ item }} state=present
+  with_items:
+    - ntp
+  tags: [ 'packages', 'ntp' ]
 
 # gnome3
 
@@ -111,6 +140,31 @@
      - "{{ gnome_3_debs }}"
   tags: [ 'packages', 'gnome3' ]
 
+# UPS
+
+- name: Install APC UPS apcupsd
+  apt: name={{ item }} state=present
+  with_items:
+    - apcupsd
+  tags: [ 'packages', 'build-essential' ]
+
+## nano /etc/apcupsd/apcupsd.conf
+
+- name: /etc/apcupsd/apcupsd.conf and backup remote version if different.
+  copy: src=etc_apcupsd_apcupsd.conf dest=/etc/apcupsd/apcupsd.conf owner=root group=root mode=644 backup=yes
+  tags: [ 'packages', 'ups' ]
+  notify: apcupsd restart
+
+
+## nano /etc/default/apcupsd
+
+- name: /etc/default/apcupsd and backup remote version if different.
+  copy: src=etc_default_apcupsd dest=/etc/default/apcupsd owner=root group=root mode=644 backup=yes
+  tags: [ 'packages', 'ups' ]
+  notify: apcupsd restart
+
+# test apcupsd here
+
 # development tools
 
 ## build-essential
@@ -121,19 +175,47 @@
     - build-essential
   tags: [ 'packages', 'build-essential' ]
 
-# system utilties
+## image processing
+
+- name: install image processing tools
+  apt: name={{ item }} state=present
+  with_items:
+    - imagemagick
+  tags: [ 'packages', 'imaging' ]
+
+# System Administration tools and utilities
 
 ## gparted
 
-- name: Install gparted and any gparted add ons.
+### addition filesystems support for gparted
+
+#- name: Install exfat files system and utilities
+#  apt: name={{ item }} state=present
+#  with_items:
+#    - bla_bla_bla
+#  tags: [ 'packages', 'sysadmin', 'filesystems', 'gparted' ]
+
+## gparted
+
+- name: Install gparted.
   apt: name={{ item }} state=present
   with_items:
     - gparted
-  tags: [ 'packages', 'gparted' ]
+  tags: [ 'packages', 'sysadmin', 'filesystems', 'gparted' ]
 
-# Passwords
+## Tools
 
-## password utilities
+- name: install curl - transfer a URL
+  apt: name={{ item }} state=present
+  with_items:
+    - curl
+  tags: [ 'packages', 'sysadmin' ]
+
+# User Security
+
+## Password utilities
+
+### Password generators
 
 - name: install password stuff
   apt: name={{ item }} state=present
@@ -141,7 +223,7 @@
     - libpam-cracklib
     - pwgen
 
-## Ensure for sufficient password complexity
+### Ensure for sufficient password complexity
 
 # Set so passwords require:
 # * minimum of 8 characters
@@ -152,38 +234,98 @@
 - name: Copy default /etc/pam.d/common-password, backup remote version if it is not the same.
   copy: src=etc_pam.d_common-password dest=/etc/pam.d/common-password owner=root group=root mode=644 backup=yes
 
-# monitoring
+### monitoring
 
-## Next generation system logging daemon
-#
-# Open Source log management solution
-# * https://syslog-ng.org/
+#### syslog-ng
 
 - name: install syslog-ng
   apt: name={{ item }} state=present
   with_items:
     - syslog-ng-core
     - syslog-ng
+  tags: [ 'packages', 'sysadmin', 'monitoring', 'syslog-ng' ]
 
-- name: install remaining stuff
+##### /etc/syslog-ng/syslog-ng.conf
+
+- name: copy etc_syslog-ng_syslog-ng.conf, backup remote version if it is not the same.
+  copy: src=etc_syslog-ng_syslog-ng.conf dest=/etc/syslog-ng/syslog-ng.conf owner=root group=root mode=644 backup=yes
+  notify: shorewall restart
+  tags: [ 'packages', 'sysadmin', 'monitoring', 'syslog-ng' ]
+
+#### htop - interactive process viewer
+
+- name: install htop
+  apt: name={{ item }} state=present
+  with_items:
+    - htop
+
+- name: install sysadmin monitoring tools
+  apt: name={{ item }} state=present
+  with_items:
+    - hddtemp
+    - smartmontools
+    - lm-sensors
+  tags: [ 'packages', 'sysadmin', 'monitoring' ]
+
+# Media
+
+## Video
+
+### vlc
+
+- name: Install media tool vlc
+  apt: name={{ item }} state=present
+  with_items:
+    - vlc
+  tags: [ 'packages', 'media' ]
+
+## Graphics
+
+### Gimp
+
+- name: Install media tool vlc
+  apt: name={{ item }} state=present
+  with_items:
+    - gimp
+  tags: [ 'packages', 'media' ]
+
+### Browsers
+
+- name: Install browsers
   apt: name={{ item }} state=present
   with_items:
     - lynx
     - links
-    - hddtemp
-    - htop
-    - smartmontools
-    - vim
-    - lm-sensors
-    - ntp
-    - unattended-upgrades
-    - icedtea-plugin
-    - imagemagick
+  tags: [ 'packages', 'browsers' ]
 
-- name: Install a list of packages via a default variable
+#### Browser plugins
+
+- name: Install browser plugins
   apt: name={{ item }} state=present
-  with_flattened:
-     - "{{ ws_debs_media }}"
-     - "{{ ws_debs_sysutils }}"
-  tags: [ 'packages' ]
+  with_items:
+    - icedtea-plugin
+  tags: [ 'packages', 'browsers_plugins' ]
+
+# editors
+
+- name: install editors
+  apt: name={{ item }} state=present
+  with_items:
+    - vim
+    - nano
+
+# Cups
+
+# Configure Uprint Services
+
+- name: Copy /etc/cups/cupsd.conf and backup remote version if different.
+  copy: src=etc_cups_cupsd.conf dest=/etc/cups/cupsd.conf owner=root group=root mode=644 backup=yes
+  tags: [ 'packages', 'cups' ]
+  notify: cups restart
+
+# Test
+# lpstat -p
+# printer McGill_color is idle.  enabled since Tue 28 Oct 2014 04:18:02 PM EDT
+# printer mcgill_mono is idle.  enabled since Tue 28 Oct 2014 04:18:03 PM EDT
+
 
