@@ -241,7 +241,7 @@ Our limit will use the letter `m` followed by the wildcard giving us `--limit=o*
 
 We will also use `--ask-become-pass` to tell ansible-playbook to prompt us for our users sudo password so that we can run commands that require sudo.
 
-        ansible-playbook host.yml --limit=m* --ask-become-pass
+        ansible-playbook systems.yml --limit=m* --ask-become-pass
 
 ### Example output.
 
