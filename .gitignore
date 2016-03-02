@@ -4,5 +4,6 @@
 # private files
 .private
 .prv
+.retry
 .vault
 
