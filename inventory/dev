@@ -19,6 +19,10 @@ db01
 db02
 
 [maestro]
-maestro ansible_connection=local
+#maestro ansible_connection=local
 
+[libvirt]
+
+[kvm]
+maestro ansible_connection=local
 
