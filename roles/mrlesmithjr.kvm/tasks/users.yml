@@ -1,4 +1,0 @@
----
-- name: users | adding kvm users
-  user: name={{ item }} groups=libvirtd append=yes state=present
-  with_items: kvm_users
