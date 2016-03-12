@@ -33,42 +33,50 @@ The layout of this project is based in part on the excellent Udemy course, "Mast
 
 ## Installing Ansible
 
-Many installtion options exist.
+Many installation options exist.
 
 1. A stable and up to date version.
 
     The following will give you a stable and easy to maintain up to date version of Ansible. You probably do not want the version of Ansible provided in the ubuntu packaging system. It was version 14.x at the time this README was created and will not run this script.
 
-1. Add repository
+1. Add repository.
 
     We are going to install from the Ansible created and maintained packages as they will give us the latest version.
 
         sudo apt-get install software-properties-common
         sudo apt-add-repository ppa:ansible/ansible
 
-1. Install Ansible
+1. Install Ansible.
 
         sudo apt-get update
         sudo apt-get install ansible -y
 
-    git clone https://github.com/ansible/ansible.git
+1. Create a project directory
+
+    Create a directory to hold your ansible projects
+
+    	mkdir ~/maestro
+
+## Installing maestro
+
+    Next we will clone the maestro project.
+
+1. Install git
+
+    If you do not already have git, now is the time to install it.
+
+        sudo apt-get install git
 
 ### clone our project
 
-    git clone https://github.com/cjsteel/maestro.git
+    Now we will clone the projrct. You may want to "fork" it first if you have a github account and want to save any adjustments you make to the code.
+
+        git clone https://github.com/cjsteel/maestro.git
 
 # Using git
 
 See [docs/git.md](docs/git.md) for a a very brief intro to git.
 
-## Project directory
-
-    Create a directory to hold your ansible projects
-
-    	mkdir ~/maestro
-    	cd ~/maestro
-
-## Installing maestro project
 
 ## Running our Ansible playbook
 

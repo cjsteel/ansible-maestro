@@ -6,4 +6,7 @@
 .prv
 .retry
 .vault
-roles/workstation
+
+# directories
+
+roles/
