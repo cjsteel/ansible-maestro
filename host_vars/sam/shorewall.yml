@@ -1,0 +1,58 @@
+---
+# the `fw firewall` entry is included in the template
+#
+# fw  firewall
+#
+zones:
+- name: "net"
+  type: "ipv4"
+
+interfaces:
+- int: "wlan0"
+  zone: "net" 
+  broadcast: "detect"
+- int: "eth0"
+  zone: "net"
+  broadcast: "detect"
+- int: "tun0"
+  zone: "net"
+  broadcast: "detect"
+
+## poliies
+#
+# following is in thetemplate and does not need to be included:
+#
+#        # The FOLLOWING POLICY MUST BE LAST
+#        all     all     REJECT
+
+policies:
+- src: "$FW"
+  dst: "net"
+  policy: "ACCEPT"
+- src: "net"
+  dst: "$FW"
+  policy: "DROP"
+
+#masq:
+#- int: "eth0"
+#  subnet: "172.16.17.0/24"
+#- int: "eth1"
+#  subnet: "192.168.189.0/24"
+
+rules:
+- rules:
+  - action: "#ACCEPT"
+    src: "net:132.226.121.0/24"
+    proto: "tcp"
+    port: 22
+  - action: "#ACCEPT"
+    src: "0.0.0.0/0"
+    proto: "tcp"
+    port: 22
+    comment: "Public SSH"
+  - action: "#ACCEPT"
+    src: "0.0.0.0/0"
+    proto: "udp"
+    port: 1194
+    comment: "Public OpenVPN"
+

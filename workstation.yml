@@ -1,6 +1,6 @@
 ---
-- hosts: kvm
+- hosts: workstation
   become: true
   gather_facts: false
   roles:
-    - kvm
+    - workstation

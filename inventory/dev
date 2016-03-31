@@ -1,28 +1,25 @@
-[windows]
-winserver1.example.com
-winserver2.example.com
+[shorewall]
+sam ansible_connection=local
+
+[kvm]
+
+[vagrant]
+
+[virtualbox]
 
 [workstation]
-ws01
-ws02
+
+[windows]
+
+[workstation]
 
 [loadbalancer]
-lb01
-lb02
 
 [webserver]
-webserver01
-webserver02
 
 [database]
-db01
-db02
 
 [maestro]
 #maestro ansible_connection=local
 
-[libvirt]
-
-[kvm]
-maestro ansible_connection=local
 

@@ -1,6 +1,6 @@
 ---
-- hosts: kvm
+- hosts: vagrant
   become: true
   gather_facts: false
   roles:
-    - kvm
+    - vagrant

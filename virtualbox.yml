@@ -1,6 +1,6 @@
 ---
-- hosts: kvm
+- hosts: virtualbox
   become: true
   gather_facts: false
   roles:
-    - kvm
+    - virtualbox
